@@ -1,0 +1,6 @@
+uvloop
+pyrofork
+tgcrypto-pyrofork
+colorlog
+aiofiles
+orjson
