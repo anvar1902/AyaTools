@@ -58,9 +58,9 @@ class Command:
             else:
                 error_message = (
                     f"❌Неверный синтаксис команды!"
-                    f"{e}"
-                    f"🤩Синтаксис: {self.spec.prefixs[0]}{self.command_name} <сообщение> <кулдаун> [сообщения за повтор] [кулдаун повторов] [повторы]"
-                    f"⚜️Ваша команда: <code>{self.spec.prefixs[0]}{command_text}</code>"
+                    f"\n{e}"
+                    f"\n🤩Синтаксис: {self.spec.prefixs[0]}{self.command_name} <сообщение> <кулдаун> [сообщения за повтор] [кулдаун повторов] [повторы]"
+                    f"\n⚜️Ваша команда: <code>{self.spec.prefixs[0]}{command_text}</code>"
                 )
             await self.client.send_message(message.chat.id, error_message, parse_mode=enums.ParseMode.HTML)
 

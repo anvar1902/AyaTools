@@ -51,6 +51,7 @@ def out_user_info(session_file, user: types.User):
 
 class AyaClient:
     def __init__(self, session_f: str, session_str: str, client_name):
+        self.saving = False
         self.session = session_f
         self.session_string = session_str
         self.logger = setup_logger(client_name, f"{session_f}.log")
@@ -84,8 +85,9 @@ class AyaClient:
         try:
             async with self.app:
                 while self.running:
-                    await asyncio.sleep(0.9)
-                    await self.save_config()
+                    await asyncio.sleep(2)
+                    if self.saving == False:
+                        await self.save_config()
         except FloodWait as e:
             self.logger.warning(f"FloodWait {e.value} секунд")
             await asyncio.sleep(e.value)
@@ -147,6 +149,7 @@ class AyaClient:
             self.logger.info(f"Создана копия недействительного конфига: {broken_file_name}")
 
     async def save_config(self):
+        self.saving = True
         cfg_json = {
             "prefixs": self.prefixs,
             "tasks": {},
@@ -166,6 +169,7 @@ class AyaClient:
             await f.write(orjson.dumps(cfg_json))
             await f.flush()
         await asyncio.to_thread(os.replace, tmp_path, dst_path)
+        self.saving = False
 
     def stop(self):
         self.running = False
@@ -221,7 +225,7 @@ if not sessions_files:
 
 while 1:
     try:
-        time.sleep(120)
+        time.sleep(5)
 
         system_logger.info("-" * 30)
         for t in threading.enumerate():
@@ -232,7 +236,7 @@ while 1:
         for session in sessions_obj:
             session.stop()
         while set(sessions_threads) & set(threading.enumerate()):
-            time.sleep(0.25)
+            time.sleep(0.2)
         system_logger.info("Программа успешно завершена!")
         break
     except Exception as e:
