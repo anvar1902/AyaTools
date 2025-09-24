@@ -57,10 +57,14 @@ class Command:
                 )
             else:
                 error_message = (
-                    f"❌Неверный синтаксис команды!"
-                    f"\n{e}"
-                    f"\n🤩Синтаксис: {self.spec.prefixs[0]}{self.command_name} <сообщение> <кулдаун> [сообщения за повтор] [кулдаун повторов] [повторы]"
-                    f"\n⚜️Ваша команда: <code>{self.spec.prefixs[0]}{command_text}</code>"
+                    f"E R R O R"
+                    f"❗️{e}"
+                    f""
+                    f"❗️Команда должна выглядеть так:"
+                    f"❤️{self.spec.prefixs[0]}{self.command_name} <сообщение> <кулдаун> [сообщения за повтор] [кулдаун повторов] [повторы]"
+                    f""
+                    f"❗️Вы написали:"
+                    f"❤️<code>{self.spec.prefixs[0]}{command_text}</code>"
                 )
             await self.client.send_message(message.chat.id, error_message, parse_mode=enums.ParseMode.HTML)
 
@@ -129,6 +133,9 @@ class Command:
             executed_repeats += 1
             self.data["last_use_time"] = time.time()
             for wait in range(data["interval"]):
+                if not self.running or not self.spec.running:
+                    self.spec.tasks[self.command].remove(self)
+                    return
                 self.data["currect_time"] = time.time()
                 await asyncio.sleep(0.96)
         self.spec.tasks[self.command].remove(self)

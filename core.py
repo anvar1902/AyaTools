@@ -51,15 +51,16 @@ def out_user_info(session_file, user: types.User):
 
 class AyaClient:
     def __init__(self, session_f: str, session_str: str, client_name):
-        self.saving = False
         self.session = session_f
         self.session_string = session_str
         self.logger = setup_logger(client_name, f"{session_f}.log")
-        self.commands = commands.ALL_COMMANDS
+        self.commands = dict(commands.ALL_COMMANDS).copy()
         self.prefixs = ["c."]
         self.tasks = {}
 
     def start(self):
+        self.logger.warning("Идём в спячку на 5 секунд чтобы скрипт спокойно успел запуститься")
+        time.sleep(5)
         self.running = True
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
@@ -85,9 +86,14 @@ class AyaClient:
         try:
             async with self.app:
                 while self.running:
-                    await asyncio.sleep(2)
-                    if self.saving == False:
-                        await self.save_config()
+                    await asyncio.sleep(15)
+                    await self.save_config()
+            if not self.running:
+                try:
+                    await self.app.stop()
+                except: pass
+                if self.app.is_initialized: await self.app.terminate()
+                if self.app.is_connected: await self.app.disconnect()
         except FloodWait as e:
             self.logger.warning(f"FloodWait {e.value} секунд")
             await asyncio.sleep(e.value)
@@ -102,13 +108,14 @@ class AyaClient:
             if self.app.is_connected: await self.app.disconnect()
 
     async def new_message_handler(self, client: Client, message: Message):
-        for prefix in self.prefixs:
-            if message.text.startswith(prefix):
-                command_text = message.text.removeprefix(prefix)
-                for command_prefix, command_obj in self.commands.items():
-                    if command_text.startswith(command_prefix):
-                        await command_obj(client, self).main_handler(command_text, message)
-                        self.logger.info(f"{command_prefix} Запущен")
+        if message.text:
+            for prefix in self.prefixs:
+                if message.text.startswith(prefix):
+                    command_text = message.text.removeprefix(prefix)
+                    for command_prefix, command_obj in self.commands.items():
+                        if command_text.startswith(command_prefix):
+                            await command_obj(client, self).main_handler(command_text, message)
+                            self.logger.info(f"{command_prefix} Запущен")
 
     async def load_config(self):
         self.logger.info("Загрузка данных с файла конфига...")
@@ -117,8 +124,9 @@ class AyaClient:
                 cfg_json = orjson.loads(await f.read())
 
             if "prefixs" in cfg_json:
-                self.prefixs = list(cfg_json["prefixs"])
-                self.logger.info("Префиксы успешно загружены")
+                if cfg_json["prefixs"]:
+                    self.prefixs = list(cfg_json["prefixs"])
+                    self.logger.info("Префиксы успешно загружены")
 
             if "tasks" in cfg_json and type(cfg_json["tasks"]) is dict:
                 restored_task = []
@@ -149,7 +157,6 @@ class AyaClient:
             self.logger.info(f"Создана копия недействительного конфига: {broken_file_name}")
 
     async def save_config(self):
-        self.saving = True
         cfg_json = {
             "prefixs": self.prefixs,
             "tasks": {},
@@ -159,7 +166,7 @@ class AyaClient:
             cfg_json["tasks"][command_name] = []
             for task_data in command_data:
                 cfg_json["tasks"][command_name].append(task_data.data)
-        for old_name, new_name in zip(commands.ALL_COMMANDS, self.commands.keys()):
+        for old_name, new_name in zip(dict(commands.ALL_COMMANDS).copy(), self.commands.keys()):
             if old_name != new_name:
                 cfg_json["commands"][old_name] = new_name
 
@@ -169,7 +176,6 @@ class AyaClient:
             await f.write(orjson.dumps(cfg_json))
             await f.flush()
         await asyncio.to_thread(os.replace, tmp_path, dst_path)
-        self.saving = False
 
     def stop(self):
         self.running = False
@@ -225,7 +231,7 @@ if not sessions_files:
 
 while 1:
     try:
-        time.sleep(5)
+        time.sleep(120)
 
         system_logger.info("-" * 30)
         for t in threading.enumerate():
