@@ -23,7 +23,7 @@ class Command:
         command_args = command[1:]
         prefix = self.spec.prefixs[0]
         try:
-            if not len(command_args) < 2:
+            if not len(command_args) < 1:
                 c_name = command_args[1]
                 if c_name in self.spec.commands.keys():
                     c_obj = self.spec.commands[c_name]
@@ -33,13 +33,11 @@ class Command:
                         f"\n{c_obj.description}"
                     )
                     await self.client.send_message(message.chat.id, help_text)
-            elif not len(command_args) < 1:
+            else:
                 help_text = "Список всех команд:"
                 for c_name, _ in self.spec.commands.items():
                     help_text = help_text + f"\n{prefix}{c_name}"
                 await self.client.send_message(message.chat.id, help_text)
-            else:
-                raise ValueError("Недостаточно аргументов")
         except ValueError as e:
             self.spec.logger.error(e)
             me = await self.client.get_me()
