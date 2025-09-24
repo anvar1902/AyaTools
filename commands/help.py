@@ -10,9 +10,9 @@ from pyrogram.errors import Unauthorized, SessionPasswordNeeded, FloodWait, Chat
     SessionRevoked, UserDeactivatedBan, AuthKeyUnregistered, UserDeactivated
 
 class Command:
-    command = "prefix"
+    command = "help"
     description = ""
-    syntax = f"{escape("<add/remove/list>")} <префикс>"
+    syntax = f"<Команда>"
     def __init__(self, client: Client, spec):
         self.client = client
         self.spec = spec
@@ -23,30 +23,21 @@ class Command:
         command_args = command[1:]
         prefix = self.spec.prefixs[0]
         try:
-            if not len(command_args) < 2 or (not len(command_args) < 1 and command_args[0] == "list"):
-                params = await self.validate_params(*command_args)
-                operation = params[0]
-                new_prefix = params[1]
-                if operation == "add":
-                    if not new_prefix in self.spec.prefixs:
-                        self.spec.prefixs.append(new_prefix)
-                        await self.client.send_message(message.chat.id, f"Префикс {new_prefix} успешно добавлен✅")
-                    else:
-                        raise ValueError("Данный префикс уже существует")
-                elif operation == "remove":
-                    if new_prefix in self.spec.prefixs:
-                        if len(self.spec.prefixs) > 1:
-                            self.spec.prefixs.remove(new_prefix)
-                            await self.client.send_message(message.chat.id, f"Префикс {new_prefix} успешно удалён✅")
-                        else:
-                            raise ValueError("У вас всего 1 префикс, вы не можете его удалить, добавьте ещё префиксы чтобы удалить этот")
-                    else:
-                        raise ValueError("Данного префикса не существует")
-                elif operation == "list":
-                    result = '\n'.join(pref for pref in self.spec.prefixs)
-                    await self.client.send_message(message.chat.id, f"Список префиксов: \n{result}")
-                else:
-                    raise ValueError("Такой операции не существует")
+            if not len(command_args) < 2:
+                c_name = command_args[1]
+                if c_name in self.spec.commands.keys():
+                    c_obj = self.spec.commands[c_name]
+                    help_text = (
+                        "Подсказка по команде:"
+                        f"\n{prefix}{c_name} {c_obj.syntax}"
+                        f"\n{c_obj.description}"
+                    )
+                    await self.client.send_message(message.chat.id, help_text)
+            elif not len(command_args) < 1:
+                help_text = "Список всех команд:"
+                for c_name, _ in self.spec.commands.items():
+                    help_text = help_text + f"\n{prefix}{c_name}"
+                await self.client.send_message(message.chat.id, help_text)
             else:
                 raise ValueError("Недостаточно аргументов")
         except ValueError as e:
@@ -62,6 +53,7 @@ class Command:
                     f"\n<emoji id=\"5341633328338451873\">❗</emoji>️ {e}"
                     f"\n"
                     f"\n<emoji id=\"5341633328338451873\">❗</emoji>️Команда должна выглядеть так:"
+                    f"\n<emoji id=\"5463258057607760727\">🩸</emoji>{prefix}{self.command_name}"
                     f"\n<emoji id=\"5463258057607760727\">🩸</emoji>{prefix}{self.command_name} {self.syntax}"
                     f"\n"
                     f"\n<emoji id=\"5341633328338451873\">❗</emoji>Вы написали:</b>"
@@ -73,23 +65,12 @@ class Command:
                     f"\n❗️{e}"
                     f"\n"
                     f"\n❗️Команда должна выглядеть так:"
+                    f"\n❤️{prefix}{self.command_name}"
                     f"\n❤️{prefix}{self.command_name} {self.syntax}"
                     f"\n"
                     f"\n❗️Вы написали:"
                     f"\n❤️<code>{prefix}{command_text}</code>"
                 )
             await self.client.send_message(message.chat.id, error_message, parse_mode=enums.ParseMode.HTML)
-
-    async def validate_params(self, operation, new_prefix = "", *args, **kwargs):
-        try:
-            text = str(operation)
-            if not text in ["add", "remove", "list"]: raise
-        except:
-            raise ValueError("Неверная или несуществующая операция.")
-        try:
-            new_prefix = str(new_prefix)
-        except:
-            raise ValueError("Неверный префикс.")
-        return text, new_prefix
 
 

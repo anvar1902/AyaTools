@@ -12,6 +12,7 @@ from pyrogram.errors import Unauthorized, SessionPasswordNeeded, FloodWait, Chat
 class Command:
     command = "command"
     description = ""
+    syntax = f"{escape("<edit>")} <Старое название> <Новое название>"
     def __init__(self, client: Client, spec):
         self.client = client
         self.spec = spec
@@ -20,6 +21,7 @@ class Command:
         command = shlex.split(command_text)
         self.command_name = command[0]
         command_args = command[1:]
+        prefix = self.spec.prefixs[0]
         try:
             if not len(command_args) < 3:
                 operation = command_args[0]
@@ -54,10 +56,10 @@ class Command:
                     f"\n<emoji id=\"5341633328338451873\">❗</emoji>️ {e}"
                     f"\n"
                     f"\n<emoji id=\"5341633328338451873\">❗</emoji>️Команда должна выглядеть так:"
-                    f"\n<emoji id=\"5463258057607760727\">🩸</emoji>{self.spec.prefixs[0]}{self.command_name} {escape("<edit>")} <Старое название> <Новое название>"
+                    f"\n<emoji id=\"5463258057607760727\">🩸</emoji>{prefix}{self.command_name} {self.syntax}"
                     f"\n"
                     f"\n<emoji id=\"5341633328338451873\">❗</emoji>Вы написали:</b>"
-                    f"\n<emoji id=\"5463258057607760727\">🩸</emoji><code>{self.spec.prefixs[0]}{command_text}</code>"
+                    f"\n<emoji id=\"5463258057607760727\">🩸</emoji><code>{prefix}{command_text}</code>"
                 )
             else:
                 error_message = (
@@ -65,10 +67,10 @@ class Command:
                     f"\n❗️{e}"
                     f"\n"
                     f"\n❗️Команда должна выглядеть так:"
-                    f"\n❤️{self.spec.prefixs[0]}{self.command_name} {escape("<edit>")} <Старое название> <Новое название>"
+                    f"\n❤️{prefix}{self.command_name} {self.syntax}"
                     f"\n"
                     f"\n❗️Вы написали:"
-                    f"\n❤️<code>{self.spec.prefixs[0]}{command_text}</code>"
+                    f"\n❤️<code>{prefix}{command_text}</code>"
                 )
             await self.client.send_message(message.chat.id, error_message, parse_mode=enums.ParseMode.HTML)
 
