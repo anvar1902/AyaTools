@@ -24,7 +24,7 @@ class Command:
         prefix = self.spec.prefixs[0]
         try:
             if not len(command_args) < 1:
-                c_name = command_args[1]
+                c_name = command_args[0]
                 if c_name in self.spec.commands.keys():
                     c_obj = self.spec.commands[c_name]
                     help_text = (
