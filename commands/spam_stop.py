@@ -49,12 +49,12 @@ class Command:
             else:
                 error_message = (
                     f"E R R O R"
-                    f"❗️{e}"
-                    f""
-                    f"❗️Команда должна выглядеть так:"
-                    f"❤️{self.spec.prefixs[0]}{self.command_name} <сообщение>"
-                    f""
-                    f"❗️Вы написали:"
-                    f"❤️<code>{self.spec.prefixs[0]}{command_text}</code>"
+                    f"\n❗️{e}"
+                    f"\n"
+                    f"\n❗️Команда должна выглядеть так:"
+                    f"\n❤️{self.spec.prefixs[0]}{self.command_name} <сообщение>"
+                    f"\n"
+                    f"\n❗️Вы написали:"
+                    f"\n❤️<code>{self.spec.prefixs[0]}{command_text}</code>"
                 )
             await self.client.send_message(message.chat.id, error_message, parse_mode=enums.ParseMode.HTML)

@@ -33,8 +33,11 @@ class Command:
                         raise ValueError("Данный префикс уже существует")
                 elif operation == "remove":
                     if new_prefix in self.spec.prefixs:
-                        self.spec.prefixs.remove(new_prefix)
-                        await self.client.send_message(message.chat.id, f"Префикс {new_prefix} успешно удалён✅")
+                        if len(self.spec.prefixs) > 1:
+                            self.spec.prefixs.remove(new_prefix)
+                            await self.client.send_message(message.chat.id, f"Префикс {new_prefix} успешно удалён✅")
+                        else:
+                            raise ValueError("У вас всего 1 префикс, вы не можете его удалить, добавьте ещё префиксы чтобы удалить этот")
                     else:
                         raise ValueError("Данного префикса не существует")
                 elif operation == "list":
@@ -65,13 +68,13 @@ class Command:
             else:
                 error_message = (
                     f"E R R O R"
-                    f"❗️{e}"
-                    f""
-                    f"❗️Команда должна выглядеть так:"
-                    f"❤️{self.spec.prefixs[0]}{self.command_name} {escape("<add/remove/list>")} <префикс>"
-                    f""
-                    f"❗️Вы написали:"
-                    f"❤️<code>{self.spec.prefixs[0]}{command_text}</code>"
+                    f"\n❗️{e}"
+                    f"\n"
+                    f"\n❗️Команда должна выглядеть так:"
+                    f"\n❤️{self.spec.prefixs[0]}{self.command_name} {escape("<add/remove/list>")} <префикс>"
+                    f"\n"
+                    f"\n❗️Вы написали:"
+                    f"\n❤️<code>{self.spec.prefixs[0]}{command_text}</code>"
                 )
             await self.client.send_message(message.chat.id, error_message, parse_mode=enums.ParseMode.HTML)
 
