@@ -33,6 +33,8 @@ class Command:
                         f"\n{c_obj.description}"
                     )
                     await self.client.send_message(message.chat.id, help_text)
+                else:
+                    raise ValueError("Такой команды не существует")
             else:
                 help_text = "Список всех команд:"
                 for c_name, _ in self.spec.commands.items():
