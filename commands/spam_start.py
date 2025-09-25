@@ -2,73 +2,40 @@ import asyncio
 import shlex
 import time
 
+from html import escape
 from pyrogram import Client, enums
 from pyrogram.types import Message
 from pyrogram.errors import Unauthorized, SessionPasswordNeeded, FloodWait, ChatIdInvalid, ChatSendGifsForbidden, \
     ChatForbidden, ChatInvalid, PeerIdInvalid, ActiveUserRequired, AuthKeyInvalid, AuthKeyPermEmpty, SessionExpired, \
     SessionRevoked, UserDeactivatedBan, AuthKeyUnregistered, UserDeactivated
 
-class Command:
+from commands.base_model import Base_Command
+
+class Command(Base_Command):
     command = "spam"
     description = ""
     syntax = "<сообщение> <кулдаун> [сообщения за повтор] [кулдаун повторов] [повторы]"
-    def __init__(self, client: Client, spec):
-        self.client = client
-        self.spec = spec
+    def __init__(self, *args):
+        super().__init__(*args)
 
-    async def main_handler(self, command_text, message: Message):
-        command = shlex.split(command_text)
-        self.command_name = command[0]
-        command_args = command[1:]
-        prefix = self.spec.prefixs[0]
-        try:
-            if not len(command_args) < 2:
-                params = await self.validate_params(*command_args)
-                data = {
-                    "chat_id": message.chat.id,
-                    "text": params[0],
-                    "interval": params[1],
-                    "count":  params[2],
-                    "delay":  params[3],
-                    "repeat_count": params[4]
-                }
-                if self.command in self.spec.tasks:
-                    for i in self.spec.tasks[self.command]:
-                        if i.data["chat_id"] == data["chat_id"] and i.data["text"] == data["text"]:
-                            raise ValueError(f"Задача {data["text"]} уже запущена в данном чате")
-                await self.start(data)
-            else:
-                raise ValueError("Недостаточно аргументов")
-        except ValueError as e:
-            self.spec.logger.error(e)
-            me = await self.client.get_me()
-            if me.is_premium:
-                error_message = (
-                    f"<b><emoji id=\"5327938799345349736\">🩸</emoji>"
-                    f"<emoji id=\"5328162635860948105\">🩸</emoji>"
-                    f"<emoji id=\"5328162635860948105\">🩸</emoji>"
-                    f"<emoji id=\"5307644490461231051\">🩸</emoji>"
-                    f"<emoji id=\"5328162635860948105\">🩸</emoji>"
-                    f"\n<emoji id=\"5341633328338451873\">❗</emoji>️ {e}"
-                    f"\n"
-                    f"\n<emoji id=\"5341633328338451873\">❗</emoji>️Команда должна выглядеть так:"
-                    f"\n<emoji id=\"5463258057607760727\">🩸</emoji>{prefix}{self.command_name} {self.syntax}"
-                    f"\n"
-                    f"\n<emoji id=\"5341633328338451873\">❗</emoji>Вы написали:</b>"
-                    f"\n<emoji id=\"5463258057607760727\">🩸</emoji><code>{prefix}{command_text}</code>"
-                )
-            else:
-                error_message = (
-                    f"E R R O R"
-                    f"\n❗️{e}"
-                    f"\n"
-                    f"\n❗️Команда должна выглядеть так:"
-                    f"\n❤️{prefix}{self.command_name} {self.syntax}"
-                    f"\n"
-                    f"\n❗️Вы написали:"
-                    f"\n❤️<code>{prefix}{command_text}</code>"
-                )
-            await self.client.send_message(message.chat.id, error_message, parse_mode=enums.ParseMode.HTML)
+    async def main(self, command_text, command_name, command_args, prefix, message):
+        if not len(command_args) < 2:
+            params = await self.validate_params(*command_args)
+            data = {
+                "chat_id": message.chat.id,
+                "text": params[0],
+                "interval": params[1],
+                "count":  params[2],
+                "delay":  params[3],
+                "repeat_count": params[4]
+            }
+            if self.command in self.spec.tasks:
+                for i in self.spec.tasks[self.command]:
+                    if i.data["chat_id"] == data["chat_id"] and i.data["text"] == data["text"]:
+                        raise ValueError(f"Задача {data["text"]} уже запущена в данном чате")
+            await self.start(data)
+        else:
+            raise ValueError("Недостаточно аргументов")
 
     async def validate_params(self, text, interval, count = 1, delay = 0.5, repeat = -1, *args, **kwargs):
         try:

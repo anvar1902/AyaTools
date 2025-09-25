@@ -86,7 +86,7 @@ class AyaClient:
         try:
             async with self.app:
                 while self.running:
-                    await asyncio.sleep(15)
+                    await asyncio.sleep(5)
                     await self.save_config()
             if not self.running:
                 try:
@@ -115,7 +115,6 @@ class AyaClient:
                     for command_prefix, command_obj in self.commands.items():
                         if command_text.startswith(command_prefix):
                             await command_obj(client, self).main_handler(command_text, message)
-                            self.logger.info(f"{command_prefix} Запущен")
 
     async def load_config(self):
         self.logger.info("Загрузка данных с файла конфига...")
